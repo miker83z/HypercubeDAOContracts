@@ -21,6 +21,7 @@ contract('Voting', (accounts) => {
     const resAlice = await token.transfer(alice, amount, {
       from: owner,
     });
+    console.log('ERC20 transfer(): ', resAlice.receipt.gasUsed);
     const resBob = await token.transfer(bob, amount, {
       from: owner,
     });
@@ -43,6 +44,7 @@ contract('Voting', (accounts) => {
     const resAlice = await proxy.lockTokens(alice, amountToLock, releaseDate, {
       from: alice,
     });
+    console.log('TokenTimelock lockTokens(): ', resAlice.receipt.gasUsed); //501818 contract creation
 
     await token.approve(proxy.address, amountToLock, {
       from: bob,
@@ -85,11 +87,12 @@ contract('Voting', (accounts) => {
 
     await new Promise((res) => setTimeout(res, millisToWait));
 
-    await lockContractAlice.release({
+    const resAlice = await lockContractAlice.release({
       from: alice,
     });
     const balanceAlice = await token.balanceOf(alice);
     assert.equal(balanceAlice, '100', 'Token was not correctly transferred');
+    console.log('TokenTimelock release(): ', resAlice.receipt.gasUsed);
 
     await lockContractBob.release({
       from: bob,
@@ -124,15 +127,19 @@ contract('Voting', (accounts) => {
       (millisToWait * debatingPeriodMul) / 1000
     );
     const debatingPeriod = new web3.utils.BN(debatingPeriodNotBN);
-    await vot.submitProposal('Vote Me!', debatingPeriod, 10, {
+    const resAlice = await vot.submitProposal('Vote Me!', debatingPeriod, 10, {
       from: alice,
     });
-    console.log(await vot.getProposalMetadata(0));
+    console.log('Voting submitProposal(): ', resAlice.receipt.gasUsed);
+    console.log(await vot.getProposalSMetadata(0));
   });
 
   it('should add two suggestions', async () => {
     const vot = await NonSafeVoting.deployed();
-    await vot.submitSuggestion(0, 'Suggestion 1', { from: alice });
+    const resAlice = await vot.submitSuggestion(0, 'Suggestion 1', {
+      from: alice,
+    });
+    console.log('Voting submitSuggestion(): ', resAlice.receipt.gasUsed);
     await vot.submitSuggestion(0, 'Suggestion 2', { from: bob });
     const num = await vot.numberOfProposalSuggestions(0);
     assert.equal(num, '2', 'Submissions wwere not correctly set');
@@ -142,7 +149,8 @@ contract('Voting', (accounts) => {
 
   it('should vote', async () => {
     const vot = await NonSafeVoting.deployed();
-    await vot.vote(0, 0, { from: alice });
+    const resAlice = await vot.vote(0, 0, { from: alice });
+    console.log('Voting vote(): ', resAlice.receipt.gasUsed);
     const voteAlice = await vot.hasVotedFor(alice, 0, 0);
     assert.equal(voteAlice, true, 'Vote was not correct');
     await vot.vote(0, 1, { from: bob });
@@ -164,7 +172,8 @@ contract('Voting', (accounts) => {
     await new Promise((res) =>
       setTimeout(res, millisToWait * debatingPeriodMul)
     );
-    await vot.executeProposal(0, { from: owner });
+    const resAlice = await vot.executeProposal(0, { from: owner });
+    console.log('Voting executeProposal(): ', resAlice.receipt.gasUsed);
     const bal = await vot.isExecuted(0);
     const bal2 = await vot.getProposalFinalResult(0);
     assert.equal(bal, true, 'Execute was not correct');
