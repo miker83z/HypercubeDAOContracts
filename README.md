@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/367964131.svg)](https://zenodo.org/badge/latestdoi/367964131)
+
 # Hypercube DAO implementation
 
 - ERC20 Token
